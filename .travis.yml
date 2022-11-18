@@ -2,16 +2,16 @@ sudo: required
 language: python
 python: 3.9
 services:
-- docker
+  - docker
 
 jobs:
   include:
-  - stage: Check code quality
-    before_install:
-    - python -m pip install --upgrade pip
-    install:
-    - pip install flake8 black
-    script:
-    - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - black --check .
+    - stage: Check code quality
+      before_install:
+        - python -m pip install --upgrade pip
+      install:
+        - pip install flake8 black
+      script:
+        - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        - black --check .

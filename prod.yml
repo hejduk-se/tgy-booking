@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 services:
   redis:
@@ -8,21 +8,21 @@ services:
     image: mysql
     restart: always
     environment:
-      MYSQL_DATABASE: 'booking'
-      MYSQL_USER: 'admin'
-      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
-      MYSQL_ROOT_PASSWORD: '${MYSQL_PASSWORD}'
+      MYSQL_DATABASE: "booking"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_PASSWORD}"
     volumes:
       - mysql:/var/lib/mysql
   app:
     image: "ghcr.io/tullinge/booking:latest"
     restart: always
     environment:
-      MYSQL_HOST: 'mysql'
-      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
-      REDIS_HOST: 'redis'
-      GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
-      GSUITE_DOMAIN_NAME: '${GSUITE_DOMAIN_NAME}' 
+      MYSQL_HOST: "mysql"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      REDIS_HOST: "redis"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      GSUITE_DOMAIN_NAME: "${GSUITE_DOMAIN_NAME}"
       PORT: "${PORT}"
     depends_on:
       - mysql

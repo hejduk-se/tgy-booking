@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.10-slim-bullseye
 
 WORKDIR /var/www/app
 
@@ -7,7 +7,7 @@ RUN mkdir .venv
 
 # install dep
 RUN pip install --upgrade pip
-RUN pip install pipenv
+RUN pip install --upgrade pipenv
 RUN apt-get update && apt-get install iproute2 tzdata git -y
 
 COPY . /var/www/app
