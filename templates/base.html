@@ -40,11 +40,13 @@
       <div>
         <p>
           Kör version {{ version }} (commit <i>{{ commit_hash }}</i>) @
-          <a href="https://github.com/tullinge/booking">tullinge/booking</a>.
+          <a href="https://github.com/hejduk-se/tgy-booking"
+            >hejduk-se/tgy-booking</a
+          >.
         </p>
-        <p>
-          Programmerat av <a href="https://github.com/tullinge/booking/graphs/contributors">dessa personer</a>.
-        </p>
+        {% if CUSTOM_FOOTER %}
+        <p>{{ CUSTOM_FOOTER | safe }}</p>
+        {% endif %}
       </div>
     </footer>
   </body>

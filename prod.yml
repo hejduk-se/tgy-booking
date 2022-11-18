@@ -15,7 +15,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
   app:
-    image: "ghcr.io/tullinge/booking:latest"
+    image: "ghcr.io/hejduk-se/tgy-booking:latest"
     restart: always
     environment:
       MYSQL_HOST: "mysql"
@@ -23,6 +23,7 @@ services:
       REDIS_HOST: "redis"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
       GSUITE_DOMAIN_NAME: "${GSUITE_DOMAIN_NAME}"
+      CUSTOM_FOOTER: "${CUSTOM_FOOTER}"
       PORT: "${PORT}"
     depends_on:
       - mysql

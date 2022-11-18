@@ -40,6 +40,9 @@ limiter.init_app(app)
 # minify
 minify(app=app)
 
+# custom footer
+CUSTOM_FOOTER = environ.get("CUSTOM_FOOTER", default=False)
+
 # variables available across all templates
 @app.context_processor
 def inject_global_variables():
@@ -49,6 +52,7 @@ def inject_global_variables():
         generation_time=strftime("%Y-%m-%d %H:%M:%S"),
         GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID,
         GSUITE_DOMAIN_NAME=GSUITE_DOMAIN_NAME,
+        CUSTOM_FOOTER=CUSTOM_FOOTER,
         BOOKING_LOCKED=dict_sql_query(
             "SELECT value FROM settings WHERE identifier='booking_locked'",
             fetchone=True,
