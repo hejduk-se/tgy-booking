@@ -102,6 +102,7 @@ def create_tabels():
             first_name VARCHAR(50) DEFAULT NULL,
             class_id INT DEFAULT NULL,
             chosen_activity INT DEFAULT NULL,
+            attendance INT DEFAULT 0,
             PRIMARY KEY (id)
         );
     """,

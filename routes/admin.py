@@ -653,7 +653,7 @@ def activity_students(id):
 
     # get students that have booked this activity and their answers
     query = sql_query(
-        f"SELECT id, last_name, first_name, class_id FROM students WHERE chosen_activity={id}"
+        f"SELECT id, last_name, first_name, class_id, attendance FROM students WHERE chosen_activity={id}"
     )
 
     students = []
@@ -689,6 +689,55 @@ def activity_students(id):
         activity=activity[0],
         questions=questions,
     )
+
+
+# toggle attendance
+@admin_routes.route("/attendance/<id>/<new_state>")
+@admin_required
+def toggle_attendance(id, new_state):
+    """
+    Toggle attendance for student
+    """
+
+    if not valid_integer(id):
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="Id must be integer."
+            ),
+            400,
+        )
+
+    if not valid_integer(new_state):
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="New state must be integer."
+            ),
+            400,
+        )
+
+    if int(new_state) not in [0, 1, 2]:
+        return (
+            render_template(
+                "errors/custom.html",
+                title="400",
+                message="New state must be 0, 1 or 2.",
+            ),
+            400,
+        )
+
+    student = sql_query(f"SELECT attendance FROM students WHERE id={id}")
+
+    if not student:
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="Student does not exist."
+            ),
+            400,
+        )
+
+    sql_query(f"UPDATE students SET attendance={new_state} WHERE id={id}")
+
+    return redirect(request.referrer)
 
 
 # admin user management

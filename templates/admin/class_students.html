@@ -15,6 +15,7 @@ school_class["class_name"] }}{% endblock %} {% block body %} {% include
         <th scope="col">Namn</th>
         <th scope="col">Klass</th>
         <th scope="col">Vald aktivitet</th>
+        <th scope="col">Närvaro</th>
       </tr>
     </thead>
     <tbody>
@@ -27,6 +28,15 @@ school_class["class_name"] }}{% endblock %} {% block body %} {% include
         </td>
         <td>{{ school_class["class_name"] }}</td>
         <td>{{ student["activity_name"] }}</td>
+        <td>
+          {% if student["student"]["attendance"] == 1 %}
+          <span class="badge badge-success">Närvarande</span>
+          {% elif student["student"]["attendance"] == 2 %}
+          <span class="badge badge-danger">Frånvarande</span>
+          {% else %}
+          <span class="badge badge-warning">Ej registrerad</span>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

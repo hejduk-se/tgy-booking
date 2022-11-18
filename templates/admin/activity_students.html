@@ -11,9 +11,11 @@
       <tr>
         <th scope="col">Namn</th>
         <th scope="col">Klass</th>
+        <th scope="col">Närvaro</th>
         {% for question in questions %}
         <th scope="col">{{ question[0] }}</th>
         {% endfor %}
+        <th scope="col">Åtgärder</th>
       </tr>
     </thead>
     <tbody>
@@ -21,9 +23,33 @@
       <tr>
         <td>{{ student[0][2] }} {{ student[0][1] }}</td>
         <td>{{ student[2] }}</td>
+        <td>
+          {% if student[0][4] == 1 %}
+          <span class="badge badge-success">Närvarande</span>
+          {% elif student[0][4] == 2 %}
+          <span class="badge badge-danger">Frånvarande</span>
+          {% else %}
+          <span class="badge badge-warning">Ej registrerad</span>
+          {% endif %}
+        </td>
         {% for answer in student[1] %}
         <td>{{ answer }}</td>
         {% endfor %}
+        <td>
+          {% if student[0][4] != 2 %}
+          <a href="/admin/attendance/{{ student[0][0] }}/2">
+            <button type="submit" class="btn btn-secondary">
+              Markera ej närvarande
+            </button>
+          </a>
+          {% endif %} {% if student[0][4] != 1 %}
+          <a href="/admin/attendance/{{ student[0][0] }}/1">
+            <button type="submit" class="btn btn-primary">
+              Markera närvarande
+            </button>
+          </a>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
