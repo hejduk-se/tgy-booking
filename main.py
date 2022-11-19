@@ -63,27 +63,27 @@ def inject_global_variables():
 # error routes
 @app.errorhandler(400)
 def error_400(e):
-    return render_template("errors/400.html"), 400
+    return render_template("errors/400.html", msg=str(e)), 400
 
 
 @app.errorhandler(404)
 def error_404(e):
-    return render_template("errors/404.html"), 404
+    return render_template("errors/404.html", msg=str(e)), 404
 
 
 @app.errorhandler(405)
 def error_405(e):
-    return render_template("errors/405.html"), 405
+    return render_template("errors/405.html", msg=str(e)), 405
 
 
 @app.errorhandler(429)
 def error_429(e):
-    return render_template("errors/429.html"), 429
+    return render_template("errors/429.html", msg=str(e)), 429
 
 
 @app.errorhandler(500)
 def error_500(e):
-    return render_template("errors/500.html"), 500
+    return render_template("errors/500.html", msg=str(e)), 500
 
 
 # session setup

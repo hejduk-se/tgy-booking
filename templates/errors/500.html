@@ -1,2 +1,2 @@
 {% extends "errors/error_base.html" %} {% block error_code %}500{% endblock %}
-{% block error_message %}An internal server error occured.{% endblock %}
+{% block error_message %}{{ msg }}{% endblock %}

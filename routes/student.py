@@ -2,7 +2,7 @@
 # https://github.com/tullinge/booking
 
 # imports
-from flask import Blueprint, render_template, redirect, request, session, jsonify
+from flask import Blueprint, render_template, redirect, request, session, jsonify, abort
 
 # components import
 from components.decorators import (
@@ -12,7 +12,7 @@ from components.decorators import (
     booking_blocked,
 )
 from components.core import basic_validation, calculate_available_spaces
-from components.google import GSUITE_DOMAIN_NAME, google_login
+from components.google import google_login, get_google_redirect_url
 from components.validation import valid_integer, valid_string
 from components.student import student_chosen_activity
 from components.db import sql_query, dict_sql_query
@@ -59,39 +59,36 @@ def index():
 @student_routes.route("/login")
 @limiter.limit("200 per hour")
 def students_login():
-    return render_template("student/login.html")
+    google_signin_url = get_google_redirect_url("/callback")
+
+    return render_template("student/login.html", google_signin_url=google_signin_url)
 
 
-@student_routes.route("/callback", methods=["POST"])
+@student_routes.route("/callback")
 @booking_blocked
 def students_callback():
-    if not request.get_json("idtoken"):
-        return (
-            jsonify({"status": False, "code": 400, "message": "missing form data"}),
-            400,
-        )
+    # Get authorization code Google sent back
+    code = request.args.get("code")
+
+    # If no code was sent
+    if not code:
+        abort(400, "missing oauth token")
 
     # verify using separate module
-    google = google_login(request.json["idtoken"], GSUITE_DOMAIN_NAME)
-
-    if not google["status"]:
-        return google["resp"]
-
-    data = google["resp"]["data"]
-    idinfo = google["resp"]["idinfo"]
+    oauth_user = google_login(code, "/callback")
 
     existing_student = dict_sql_query(
-        f"SELECT * FROM students WHERE email='{data['email']}'", fetchone=True
+        f"SELECT * FROM students WHERE email='{oauth_user['email']}'", fetchone=True
     )
 
     # check if email exists in students
     if not existing_student:
         # create new object
         sql_query(
-            f"INSERT INTO students (email, last_name, first_name) VALUES ('{data['email']}', '{data['family_name']}', '{data['given_name']}')"
+            f"INSERT INTO students (email, last_name, first_name) VALUES ('{oauth_user['email']}', '{oauth_user['family_name']}', '{oauth_user['given_name']}')"
         )
         existing_student = dict_sql_query(
-            f"SELECT * FROM students WHERE email='{data['email']}'", fetchone=True
+            f"SELECT * FROM students WHERE email='{oauth_user['email']}'", fetchone=True
         )
 
     school_class = None
@@ -101,13 +98,13 @@ def students_callback():
             fetchone=True,
         )["class_name"]
 
-    session["fullname"] = f"{data['given_name']} {data['family_name']}"
+    session["fullname"] = f"{oauth_user['given_name']} {oauth_user['family_name']}"
     session["logged_in"] = True
-    session["picture_url"] = idinfo["picture"]
+    session["picture_url"] = oauth_user["picture"]
     session["id"] = existing_student["id"]
     session["school_class"] = school_class
 
-    return jsonify({"status": True, "code": 200, "message": "authenticated"}), 400
+    return redirect("/")
 
 
 @student_routes.route("/callback/error", methods=["POST"])

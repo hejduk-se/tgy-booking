@@ -1,15 +1,8 @@
 {% extends "base.html" %} {% block title %} - Logga in{% endblock %} {% block
-custom_head %} {% include "google.html" %}
+custom_head %}
 <style>
   .footer div {
     text-align: center;
-  }
-  .g-signin2 {
-    width: 100%;
-  }
-
-  .g-signin2 > div {
-    margin: 0 auto;
   }
 </style>
 {% endblock %} {% block body %}
@@ -34,61 +27,11 @@ custom_head %} {% include "google.html" %}
     system.
   </div>
   {% else %}
-  <div class="g-signin2" data-onsuccess="onSignIn"></div>
+  <a href="{{ google_signin_url }}" class="btn btn-primary">
+    <i class="fab fa-google"></i>
+    Logga in med Google
+  </a>
+
   {% endif %}
-
-  <script>
-    function onSignIn(googleUser) {
-      var id_token = googleUser.getAuthResponse().id_token;
-
-      fetch("/callback", {
-        method: "POST",
-        body: JSON.stringify({
-          idtoken: id_token
-        })
-      })
-        .then(function(response) {
-          if (response.status == 200 || response.status == 400) {
-            return response.json();
-          } else {
-            error(
-              response.status +
-                " - ett serverfel uppstod vid inloggning. Vänligen försök igen senare!"
-            );
-          }
-        })
-        .then(function(json) {
-          if (json.status) {
-            window.location.replace("setup");
-          } else {
-            error(json.message);
-          }
-        });
-    }
-
-    function error(message, doSignOut = true) {
-      if (doSignOut) {
-        signOut();
-      }
-      document.getElementById("message").value = message;
-      document.forms.errorRedirect.submit();
-    }
-
-    window.onerror = function() {
-      error(
-        "Ett fel uppstod vid inloggningen. Med största sannolikhet blockerar din webbläsare cookies från tredjepart. I Chrome kan detta ändras under 'Cookies and site data', på chrome://settings/content/cookies. Kontakta ansvarig om problemet kvarstår.",
-        (doSignOut = false)
-      );
-    };
-  </script>
-
-  <form
-    id="errorRedirect"
-    style="display: none;"
-    method="POST"
-    action="/callback/error"
-  >
-    <input id="message" type="hidden" name="message" value="" />
-  </form>
 </div>
 {% endblock %}

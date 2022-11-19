@@ -30,6 +30,8 @@ These environment variables need to be set (except the ones which have defaults)
 - `MYSQL_PASSWORD` - default is `do-not-use-in-production` (override this in production!)
 - `MYSQL_DATABASE` - default is `booking`
 - `GOOGLE_CLIENT_ID` - must be set manually, used for communicating with Google API.
+- `GOOGLE_CLIENT_SECRET` - must be set manually, used for communicating with Google API.
+- `APP_URL` - default is `http://localhost:5000`
 - `GSUITE_DOMAIN_NAME` - must be set manually, used for limiting logins to a specific G Suite organization
 - `PORT` - must be set manually, if using Docker deployment
 
