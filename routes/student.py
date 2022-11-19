@@ -388,7 +388,8 @@ def selected_activity(id):
         sql_query(
             f"""
                 UPDATE students
-                SET chosen_activity={int(id)}
+                SET chosen_activity={int(id)},
+                attendance = 0
                 WHERE id={session.get('id')}
             """
         )
