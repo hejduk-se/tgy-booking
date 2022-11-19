@@ -17,6 +17,7 @@ block custom_head %}{% include "google.html" %}{% endblock %} {% block body %}
         <th scope="col">#</th>
         <th scope="col">Namn</th>
         <th scope="col">Klass</th>
+        <th scope="col">Närvaro</th>
         {% for question in activity["questions"] %}
         <th scope="col">{{ question["question"] }}</th>
         {% endfor %}
@@ -31,6 +32,15 @@ block custom_head %}{% include "google.html" %}{% endblock %} {% block body %}
           student["student"]["last_name"] }}
         </td>
         <td>{{ student["class_name"] }}</td>
+        <td>
+          {% if student["student"]["attendance"] == 1 %}
+          <span class="badge badge-success">Närvarande</span>
+          {% elif student["student"]["attendance"] == 2 %}
+          <span class="badge badge-danger">Frånvarande</span>
+          {% else %}
+          <span class="badge badge-warning">Ej registrerad</span>
+          {% endif %}
+        </td>
         {% for answer in student["answers"] %}
         <td>{{ answer }}</td>
         {% endfor %}
