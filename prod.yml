@@ -27,6 +27,8 @@ services:
       GSUITE_DOMAIN_NAME: "${GSUITE_DOMAIN_NAME}"
       CUSTOM_FOOTER: "${CUSTOM_FOOTER}"
       PORT: "${PORT}"
+      # app is meant to run behind other reverse proxy, so this is OK
+      OAUTHLIB_INSECURE_TRANSPORT: "1"
     depends_on:
       - mysql
       - redis
