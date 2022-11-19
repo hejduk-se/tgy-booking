@@ -21,6 +21,7 @@ block custom_head %}{% include "google.html" %}{% endblock %} {% block body %}
         {% for question in activity["questions"] %}
         <th scope="col">{{ question["question"] }}</th>
         {% endfor %}
+        <th scope="col">Åtgärder</th>
       </tr>
     </thead>
     <tbody>
@@ -44,6 +45,21 @@ block custom_head %}{% include "google.html" %}{% endblock %} {% block body %}
         {% for answer in student["answers"] %}
         <td>{{ answer }}</td>
         {% endfor %}
+        <td>
+          {% if student["student"]["attendance"] != 2 %}
+          <a href="/leader/attendance/{{ student["student"]["id"] }}/2">
+            <button type="submit" class="btn btn-secondary">
+              Markera ej närvarande
+            </button>
+          </a>
+          {% endif %} {% if student["student"]["attendance"] != 1 %}
+          <a href="/leader/attendance/{{ student["student"]["id"] }}/1">
+            <button type="submit" class="btn btn-primary">
+              Markera närvarande
+            </button>
+          </a>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

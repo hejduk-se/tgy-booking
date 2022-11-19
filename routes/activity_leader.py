@@ -3,9 +3,10 @@
 
 from flask import Blueprint, render_template, jsonify, request, session, redirect
 
-from components.db import dict_sql_query
+from components.db import dict_sql_query, sql_query
 from components.google import google_login
 from components.decorators import activity_leader_login_required
+from components.validation import valid_integer
 
 # blueprint init
 activity_leader_routes = Blueprint(
@@ -81,6 +82,78 @@ def index():
         )
 
     return render_template("leader/index.html", activities=activities)
+
+
+# toggle attendance
+@activity_leader_routes.route("/attendance/<id>/<new_state>")
+@activity_leader_login_required
+def toggle_attendance(id, new_state):
+    """
+    Toggle attendance for student
+    """
+
+    if not valid_integer(id):
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="Id must be integer."
+            ),
+            400,
+        )
+
+    if not valid_integer(new_state):
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="New state must be integer."
+            ),
+            400,
+        )
+
+    if int(new_state) not in [0, 1, 2]:
+        return (
+            render_template(
+                "errors/custom.html",
+                title="400",
+                message="New state must be 0, 1 or 2.",
+            ),
+            400,
+        )
+
+    student = dict_sql_query(
+        f"SELECT attendance, chosen_activity FROM students WHERE id={id}"
+    )
+
+    if not student:
+        return (
+            render_template(
+                "errors/custom.html", title="400", message="Student does not exist."
+            ),
+            400,
+        )
+
+    # fetch activities leader has access to
+    query = dict_sql_query(
+        f"SELECT activity_id FROM leaders WHERE email='{session.get('leader_email')}'"
+    )
+
+    leader_has_access_to_activity = False
+    for obj in query:
+        if obj["activity_id"] == student[0]["chosen_activity"]:
+            leader_has_access_to_activity = True
+            break
+
+    if not leader_has_access_to_activity:
+        return (
+            render_template(
+                "errors/custom.html",
+                title="401",
+                message="Leader does not have access to this activity.",
+            ),
+            401,
+        )
+
+    sql_query(f"UPDATE students SET attendance={new_state} WHERE id={id}")
+
+    return redirect(request.referrer)
 
 
 @activity_leader_routes.route("/login")
