@@ -1,10 +1,10 @@
 # tullinge/booking
 # https://github.com/tullinge/booking
 
-from flask import Blueprint, render_template, jsonify, request, session, redirect
+from flask import Blueprint, render_template, jsonify, request, session, redirect, abort
 
 from components.db import dict_sql_query, sql_query
-from components.google import google_login
+from components.google import google_login, get_google_redirect_url
 from components.decorators import activity_leader_login_required
 from components.validation import valid_integer
 
@@ -158,41 +158,32 @@ def toggle_attendance(id, new_state):
 
 @activity_leader_routes.route("/login")
 def login():
-    return render_template("leader/login.html")
+    google_signin_url = get_google_redirect_url("/leader/callback")
+
+    return render_template("leader/login.html", google_signin_url=google_signin_url)
 
 
-@activity_leader_routes.route("/callback", methods=["POST"])
+@activity_leader_routes.route("/callback")
 def students_callback():
-    if not request.get_json("idtoken"):
-        return (
-            jsonify({"status": False, "code": 400, "message": "missing form data"}),
-            400,
-        )
+    # Get authorization code Google sent back
+    code = request.args.get("code")
 
     # verify using separate module
-    google = google_login(request.json["idtoken"], None)
-
-    if not google["status"]:
-        return google["resp"]
-
-    data = google["resp"]["data"]
+    oauth_user = google_login(code, "/leader/callback", ignore_wrong_hd=True)
 
     # perform some validation against database
     leader = dict_sql_query(
-        f"SELECT * FROM leaders WHERE email='{data['email']}'", fetchone=True
+        f"SELECT * FROM leaders WHERE email='{oauth_user['email']}'", fetchone=True
     )
 
     if not leader:
-        return jsonify({"status": False, "code": 400, "message": "User is not leader."})
+        abort(401, "User is not leader.")
 
     session["leader_logged_in"] = True
     session["leader_id"] = leader["id"]
     session["leader_email"] = leader["email"]
 
-    return (
-        jsonify({"status": True, "code": 200, "message": "authenticated"}),
-        200,
-    )
+    return redirect(BASEPATH)
 
 
 @activity_leader_routes.route("/callback/error", methods=["POST"])

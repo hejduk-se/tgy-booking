@@ -45,8 +45,7 @@ def get_google_redirect_url(callback_url: str):
     return request_uri
 
 
-def google_login(code: str, callback_url: str):
-    print("hello!")
+def google_login(code: str, callback_url: str, ignore_wrong_hd=False):
 
     # If no code was sent
     if not code:
@@ -85,14 +84,16 @@ def google_login(code: str, callback_url: str):
     # The user authenticated with Google, authorized your
     # app, and now you've verified their email through Google!
     if userinfo_response.json().get("email_verified"):
-        if "hd" not in userinfo_response.json():
-            abort(400, "Email is not hosted domain. Please use your school email.")
+        if not ignore_wrong_hd:
+            if "hd" not in userinfo_response.json():
+                abort(400, "Email is not hosted domain. Please use your school email.")
 
-        if userinfo_response.json()["hd"] != GSUITE_DOMAIN_NAME:
-            abort(
-                400,
-                f"This system requires that you login with your {GSUITE_DOMAIN_NAME}, but you logged in with {userinfo_response.json()['hd']}.",
-            )
+        if not ignore_wrong_hd:
+            if userinfo_response.json()["hd"] != GSUITE_DOMAIN_NAME:
+                abort(
+                    400,
+                    f"This system requires that you login with your {GSUITE_DOMAIN_NAME}, but you logged in with {userinfo_response.json()['hd']}.",
+                )
 
         return userinfo_response.json()
 

@@ -1,15 +1,8 @@
 {% extends "base.html" %} {% block title %} - Logga in som aktivitetsledare{%
-endblock %} {% block custom_head %} {% include "google.html" %}
+endblock %} {% block custom_head %}
 <style>
   .footer div {
     text-align: center;
-  }
-  .g-signin2 {
-    width: 100%;
-  }
-
-  .g-signin2 > div {
-    margin: 0 auto;
   }
 </style>
 {% endblock %} {% block body %}
@@ -28,51 +21,9 @@ endblock %} {% block custom_head %} {% include "google.html" %}
 
   <p class="align-center">Du loggar in med ditt skolkonto.</p>
 
-  <div class="g-signin2" data-onsuccess="onSignIn"></div>
-
-  <script>
-    function onSignIn(googleUser) {
-      var id_token = googleUser.getAuthResponse().id_token;
-
-      fetch("/leader/callback", {
-        method: "POST",
-        body: JSON.stringify({
-          idtoken: id_token
-        })
-      })
-        .then(function(response) {
-          if (response.status == 200 || response.status == 400) {
-            return response.json();
-          } else {
-            error(
-              response.status +
-                " - ett serverfel uppstod vid inloggning. Vänligen försök igen senare!"
-            );
-          }
-        })
-        .then(function(json) {
-          if (json.status) {
-            window.location.replace("/leader");
-          } else {
-            error(json.message);
-          }
-        });
-    }
-
-    function error(message) {
-      signOut();
-      document.getElementById("message").value = message;
-      document.forms.errorRedirect.submit();
-    }
-  </script>
-
-  <form
-    id="errorRedirect"
-    style="display: none;"
-    method="POST"
-    action="/leader/callback/error"
-  >
-    <input id="message" type="hidden" name="message" value="" />
-  </form>
+  <a href="{{ google_signin_url }}" class="btn btn-primary">
+    <i class="fab fa-google"></i>
+    Logga in med Google
+  </a>
 </div>
 {% endblock %}
