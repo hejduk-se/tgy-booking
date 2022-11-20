@@ -83,8 +83,7 @@ def create_tabels():
         CREATE TABLE admins (
             id INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(50) DEFAULT NULL,
-            username VARCHAR(255) DEFAULT NULL,
-            password VARCHAR(255) DEFAULT NULL,
+            email VARCHAR(255) DEFAULT NULL,
             PRIMARY KEY (id)
         );
     """,

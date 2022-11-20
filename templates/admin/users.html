@@ -35,31 +35,21 @@ block body %} {% include "admin/navbar.html" %}
       >
     </div>
     <div class="form-group">
-      <label for="name">Användarnamn</label>
+      <label for="name">E-mail</label>
       <input
         required
-        name="username"
+        name="email"
         type="text"
         class="form-control"
-        id="username"
+        id="email"
         aria-describedby="usernameHelp"
-        placeholder="Användarnamn"
+        placeholder="firstname.lastname@email.com"
       />
       <small id="usernameHelp" class="form-text text-muted"
-        >Detta är användarnamnet som används vid inloggning. Mellanslag inte
-        tillåtet.</small
+        >E-postadressen måste vara ett Googlekonto. Var försiktig med vad du
+        anger här, användare du lägger till kommer kunna logga in och ta bort
+        dig som admin.</small
       >
-    </div>
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input
-        required
-        name="password"
-        type="password"
-        class="form-control"
-        id="password"
-        placeholder="Lösenord"
-      />
     </div>
     <button type="submit" class="btn btn-primary">Skapa ny användare</button>
   </form>
@@ -69,7 +59,7 @@ block body %} {% include "admin/navbar.html" %}
       <tr>
         <th scope="col">#</th>
         <th scope="col">Namn</th>
-        <th scope="col">Användarnamn</th>
+        <th scope="col">E-mail</th>
         <th scope="col">Åtgärd</th>
       </tr>
     </thead>
@@ -78,7 +68,7 @@ block body %} {% include "admin/navbar.html" %}
       <tr>
         <th scope="row">{{ admin["id"] }}</th>
         <td>{{ admin["name"] }}</td>
-        <td>{{ admin["username"] }}</td>
+        <td>{{ admin["email"] }}</td>
         <td>
           <form action="/admin/users" method="POST">
             <input
@@ -89,9 +79,7 @@ block body %} {% include "admin/navbar.html" %}
             />
             <input type="hidden" id="id" name="id" value="{{ admin['id'] }}" />
 
-            <button type="submit" class="btn btn-primary">
-              Radera
-            </button>
+            <button type="submit" class="btn btn-primary">Radera</button>
           </form>
         </td>
       </tr>

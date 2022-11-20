@@ -2,7 +2,7 @@
 # https://github.com/tullinge/booking
 
 # imports
-from flask import Blueprint, render_template, request, redirect, session
+from flask import Blueprint, render_template, request, redirect, session, abort
 
 # components import
 from components.validation import valid_integer, valid_string
@@ -14,6 +14,7 @@ from components.admin import (
     get_activites_with_spaces,
     get_activity_questions_and_options,
 )
+from components.google import get_google_redirect_url, google_login
 from components.core import (
     hash_password,
     verify_password,
@@ -26,67 +27,42 @@ admin_routes = Blueprint("admin_routes", __name__, template_folder="../templates
 
 BASEPATH = "/admin"
 
+
 # admin login
-@admin_routes.route("/login", methods=["GET", "POST"])
+@admin_routes.route("/login")
 @limiter.limit("100 per hour")
 def login():
     """
     Admin authentication
 
     * display login form (GET)
-    * parse and validate data, login if correct password (POST)
     """
 
-    template = "admin/login.html"
+    google_signin_url = get_google_redirect_url("/admin/callback")
 
-    if request.method == "GET":
-        return render_template(template)
-    elif request.method == "POST":
-        username = request.form["username"].lower()
-        password = request.form["password"]
+    return render_template("admin/login.html", google_signin_url=google_signin_url)
 
-        if not valid_string(password, min_length=8, max_length=100):
-            return (
-                render_template(template, fail="Lösenord för långt/kort (8-100)."),
-                400,
-            )
 
-        if not valid_string(
-            username,
-            min_length=4,
-            max_length=255,
-            allow_punctuation=False,
-            allow_space=False,
-            swedish=False,
-            allow_newline=False,
-        ):
-            return (
-                render_template(template, fail="Felaktig begäran."),
-                400,
-            )
+@admin_routes.route("/callback")
+def admin_callback():
+    # Get authorization code Google sent back
+    code = request.args.get("code")
 
-        admin = dict_sql_query(
-            f"SELECT * FROM admins WHERE username='{username}'", fetchone=True
-        )
+    # verify using separate module
+    oauth_user = google_login(code, "/admin/callback", ignore_wrong_hd=True)
 
-        if not admin:
-            return (
-                render_template(template, fail="Fel användarnamn eller lösenord."),
-                401,
-            )
+    # perform some validation against database
+    admin = dict_sql_query(
+        f"SELECT * FROM admins WHERE email='{oauth_user['email']}'", fetchone=True
+    )
 
-        # verify password
-        if not verify_password(admin["password"], password):
-            return (
-                render_template(template, fail="Fel användarnamn eller lösenord."),
-                401,
-            )
+    if not admin:
+        abort(401, "User is not admin.")
 
-        session["admin_logged_in"] = True
-        session["admin_id"] = admin["id"]
+    session["admin_logged_in"] = True
+    session["admin_id"] = admin["id"]
 
-        # if validation has come this far, user should be authenticated
-        return redirect(f"{BASEPATH}/")
+    return redirect(BASEPATH)
 
 
 # admin logout, pop session
@@ -753,7 +729,7 @@ def admin_users():
     """
 
     template = "admin/users.html"
-    query = "SELECT id, name, username FROM admins"
+    query = "SELECT id, name, email FROM admins"
     admins = dict_sql_query(query)
 
     if request.method == "GET":
@@ -806,7 +782,7 @@ def admin_users():
             )
 
         if data["request_type"] == "add":
-            if len(data) != 4:
+            if len(data) != 3:
                 return (
                     render_template(template, admins=admins, fail="Saknar data."),
                     400,
@@ -826,49 +802,21 @@ def admin_users():
                     400,
                 )
 
-            if not valid_string(
-                data["username"],
-                min_length=4,
-                max_length=255,
-                allow_space=False,
-                allow_newline=False,
-                swedish=False,
-                allow_punctuation=False,
-            ):
-                return (
-                    render_template(
-                        template, admins=admins, fail="Ogiltigt användarnamn."
-                    ),
-                    400,
-                )
-
-            if not valid_string(
-                data["password"],
-                min_length=8,
-                max_length=100,
-                allow_space=False,
-            ):
-                return render_template(
-                    template,
-                    admins=admins,
-                    fail="Lösenordet måste vara mellan 8 och 100 karaktärer långt.",
-                )
-
             if sql_query(
-                f"SELECT id FROM admins WHERE username='{data['username'].lower()}'"
+                f"SELECT id FROM admins WHERE email='{data['email'].lower()}'"
             ):
                 return (
                     render_template(
                         template,
                         admins=admins,
-                        fail="En admin med detta användarnamn existerar redan.",
+                        fail="En admin med detta email existerar redan.",
                     ),
                     400,
                 )
 
             # create new user
             sql_query(
-                f"INSERT INTO admins (name, username, password) VALUES ('{data['name']}', '{data['username'].lower()}', '{hash_password(data['password'])}')"
+                f"INSERT INTO admins (name, email) VALUES ('{data['name']}', '{data['email'].lower()}')"
             )
 
             # re-fetch
