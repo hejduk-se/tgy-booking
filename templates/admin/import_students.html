@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block title %} - Ladda upp CSV{% endblock %} {%
+block body %} {% include "admin/navbar.html" %}
+<div class="content">
+  {% if fail %}
+  <div class="alert alert-danger" role="alert">
+    <p>{{ fail }}</p>
+  </div>
+  {% endif %} {% if success %}
+  <div class="alert alert-success" role="alert">
+    <p>{{ success }}</p>
+  </div>
+  {% endif %}
+  <h1>Importera elever från Vklass</h1>
+  <p>
+    Ladda ned en CSV fil från Vklass och ladda upp den här så importeras alla
+    elever i klassen. Om klassen inte finns, så skapas den automatiskt. Endast
+    filer som slutar på .csv tillåts. Redigera inte innehållet i filen, systemet
+    kommer inte läsa filer som innehåller ogiltig information.
+  </p>
+
+  <form
+    action="/admin/import-students"
+    method="POST"
+    enctype="multipart/form-data"
+  >
+    <div class="mb-3">
+      <label for="csvfile" class="form-label"
+        >Välj .csv fil, t.ex NA22B.csv</label
+      >
+      <input class="form-control" type="file" id="csvfile" name="csv" />
+    </div>
+    <button type="submit" class="btn btn-primary">Importera</button>
+  </form>
+</div>
+{% endblock %}

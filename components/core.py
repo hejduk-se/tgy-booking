@@ -93,3 +93,10 @@ def dict_search(list_dictionary, key, value):
     """
 
     return [element for element in list_dictionary if element[key] == value]
+
+
+def allowed_file(filename: str, allowed_file_extensions: list):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in allowed_file_extensions
+    )

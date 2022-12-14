@@ -3,9 +3,11 @@
 
 # imports
 from flask import Blueprint, render_template, request, redirect, session, abort
+from werkzeug.utils import secure_filename
+import csv
 
 # components import
-from components.validation import valid_integer, valid_string
+from components.validation import valid_integer, valid_string, valid_email
 from components.db import sql_query, dict_sql_query
 from components.decorators import admin_required
 from components.codes import generate_code
@@ -20,6 +22,7 @@ from components.core import (
     verify_password,
     calculate_available_spaces,
     basic_validation,
+    allowed_file,
 )
 
 # blueprint init
@@ -1007,6 +1010,135 @@ def school_classes():
             ),
             400,
         )
+
+
+# upload CSV file with "vklass" data, imports class and students to the class
+@admin_routes.route("/import-students", methods=["POST", "GET"])
+@admin_required
+def admin_import_students():
+    template = "admin/import_students.html"
+
+    if request.method == "GET":
+        return render_template(template)
+
+    # check if the post request has the file part
+    if "csv" not in request.files:
+        return (
+            render_template(template, fail="Ingen fil har laddats upp."),
+            400,
+        )
+    file = request.files["csv"]
+    if file.filename == "":
+        return (
+            render_template(template, fail="Tom/ingen fil har laddats upp."),
+            400,
+        )
+    if not file or not allowed_file(file.filename, ["csv"]):
+        return (
+            render_template(
+                template, fail="Felaktig filändelse eller annat fel med filen."
+            ),
+            400,
+        )
+
+    try:
+        csv_raw = file.read().decode("utf-8").splitlines()
+        reader = csv.reader(csv_raw)
+        parsed_csv = list(reader)
+    except Exception:
+        return (
+            render_template(template, fail="Felaktig CSV fil, kunde ej parsa."),
+            400,
+        )
+
+    students = []
+    header = parsed_csv[0]
+    counter_students = 0
+    counter_classes = 0
+
+    # first row will be HEADERS in new students list
+
+    for row in parsed_csv[1:]:
+        if len(row) != len(header):
+            return (
+                render_template(
+                    template,
+                    fail=f"Rad har fel antal kolumner.",
+                ),
+                400,
+            )
+
+        students.append({header[i]: row[i] for i in range(len(header))})
+
+    for student in students:
+        # get class name
+        class_name = student["titleTextBox"].split(" ")[1].upper()
+        email = student["htmlTextBox9"]
+        fullname = student["htmlTextBox1"]
+        firstname = fullname.split(" ")[0]
+        lastname = fullname.split(" ")[1]
+
+        # check that class name is valid
+        if not valid_string(
+            class_name,
+            min_length=3,
+            max_length=10,
+            allow_space=False,
+            allow_newline=False,
+            allow_punctuation=False,
+        ):
+            return (
+                render_template(
+                    template,
+                    fail="Innehåller ogiltiga tecken i klassnamn på någon elev.",
+                ),
+                400,
+            )
+
+        # check that email is valid
+        if not valid_email(email):
+            return (
+                render_template(
+                    template,
+                    fail="Innehåller ogiltiga tecken i e-post på någon elev.",
+                ),
+                400,
+            )
+
+        # check that class does not exist, if it does, create it
+        class_id = dict_sql_query(
+            f"SELECT id FROM school_classes WHERE class_name='{class_name}'",
+            fetchone=True,
+        )
+        if not class_id:
+            sql_query(
+                f"INSERT INTO school_classes (class_name, password) VALUES ('{class_name}', '{generate_code()}')"
+            )
+            counter_classes += 1
+        class_id = dict_sql_query(
+            f"SELECT id FROM school_classes WHERE class_name='{class_name}'",
+            fetchone=True,
+        )
+
+        # create student if it does not exist
+        student_id = dict_sql_query(
+            f"SELECT id, class_id FROM students WHERE email='{email}'", fetchone=True
+        )
+        if student_id and student_id["class_id"] == None:
+            sql_query(
+                f"UPDATE students SET class_id={class_id['id']} WHERE email='{email}'"
+            )
+            counter_students += 1
+        if not student_id:
+            sql_query(
+                f"INSERT INTO students (first_name, last_name, email, class_id) VALUES ('{firstname}', '{lastname}', '{email}', {class_id['id']})"
+            )
+            counter_students += 1
+
+    return render_template(
+        template,
+        success=f"Skapade {counter_classes} klasser och {counter_students} elever.",
+    )
 
 
 # show students per class

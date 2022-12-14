@@ -98,3 +98,23 @@ def valid_integer(variable, min_length=None, max_length=None):
         return False
 
     return True
+
+
+def valid_email(variable):
+    """Returns boolean whether variable is valid input or not"""
+
+    # check if variable is defined
+    if not variable:
+        return False
+
+    # check that variable does not contain any illegal characters
+    if not character_validation(
+        variable, allow_space=False, swedish=False, allow_punctuation=True
+    ):
+        return False
+
+    # check if variable is valid email
+    if not "@" in variable:
+        return False
+
+    return True
