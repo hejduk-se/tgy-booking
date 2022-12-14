@@ -1,6 +1,15 @@
 {% extends "base.html" %} {% block title %} - Elever{% endblock %} {% block body
 %} {% include "admin/navbar.html" %}
 <div class="content">
+  {% if fail %}
+  <div class="alert alert-danger" role="alert">
+    <p>{{ fail }}</p>
+  </div>
+  {% endif %} {% if success %}
+  <div class="alert alert-success" role="alert">
+    <p>{{ success }}</p>
+  </div>
+  {% endif %}
   <h1>Elever</h1>
   <p>
     Visar elever som har loggat in med sina Google konton minst en gång. Notera
@@ -9,9 +18,7 @@
   </p>
 
   <a href="/admin/students?show=all">
-    <button class="btn btn-primary no-print">
-      Visa alla elever
-    </button>
+    <button class="btn btn-primary no-print">Visa alla elever</button>
   </a>
 
   <div class="alert alert-warning no-print" role="alert">
@@ -35,6 +42,7 @@
         <th scope="col">Namn</th>
         <th scope="col">Klass</th>
         <th scope="col">Vald aktivitet</th>
+        <th scope="col">Åtgärder</th>
       </tr>
     </thead>
     <tbody>
@@ -48,6 +56,48 @@
         </td>
         <td>{{ student["class_name"] }}</td>
         <td>{{ student["activity_name"] }}</td>
+        <td>
+          <form
+            style="border: none; float: left"
+            action="/admin/students?show=true"
+            method="POST"
+          >
+            <input
+              type="hidden"
+              id="request_type"
+              name="request_type"
+              value="delete"
+            />
+            <input
+              type="hidden"
+              id="id"
+              name="id"
+              value="{{ student['student']['id'] }}"
+            />
+            <button type="submit" class="btn btn-danger">Radera</button>
+          </form>
+          <form
+            style="border: none; float: left"
+            action="/admin/students?show=true"
+            method="POST"
+          >
+            <input
+              type="hidden"
+              id="request_type"
+              name="request_type"
+              value="delete_from_class"
+            />
+            <input
+              type="hidden"
+              id="id"
+              name="id"
+              value="{{ student['student']['id'] }}"
+            />
+            <button type="submit" class="btn btn-primary">
+              Ta bort från klass
+            </button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

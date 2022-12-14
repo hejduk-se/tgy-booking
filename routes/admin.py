@@ -833,7 +833,7 @@ def admin_users():
 
 
 # student codes
-@admin_routes.route("/students", methods=["GET"])
+@admin_routes.route("/students", methods=["GET", "POST"])
 @admin_required
 def students():
     """
@@ -842,29 +842,110 @@ def students():
     * list all students/codes (GET)
     """
 
-    students = []
-    if request.args.get("show"):
-        for student in dict_sql_query("SELECT * FROM students"):
-            students.append(
-                {
-                    "student": student,
-                    "activity_name": dict_sql_query(
-                        f"SELECT name FROM activities WHERE id={student['chosen_activity']}",
-                        fetchone=True,
-                    )["name"]
-                    if student["chosen_activity"]
-                    else "Ej valt",
-                    "class_name": dict_sql_query(
-                        f"SELECT class_name FROM school_classes WHERE id={student['class_id']}",
-                        fetchone=True,
-                    )["class_name"]
-                    if student["class_id"]
-                    else "Har ej gått med.",
-                }
-            )
+    def _get_students():
+        students = []
+        if request.args.get("show"):
+            for student in dict_sql_query("SELECT * FROM students"):
+                students.append(
+                    {
+                        "student": student,
+                        "activity_name": dict_sql_query(
+                            f"SELECT name FROM activities WHERE id={student['chosen_activity']}",
+                            fetchone=True,
+                        )["name"]
+                        if student["chosen_activity"]
+                        else "Ej valt",
+                        "class_name": dict_sql_query(
+                            f"SELECT class_name FROM school_classes WHERE id={student['class_id']}",
+                            fetchone=True,
+                        )["class_name"]
+                        if student["class_id"]
+                        else "Har ej gått med.",
+                    }
+                )
+            return students
+
+    students = _get_students()
 
     if request.method == "GET":
         return render_template("admin/students.html", students=students)
+
+    if request.method == "POST":
+        data = request.form
+
+        # if deleting
+        if data["request_type"] == "delete":
+            if not data["id"]:
+                return (
+                    render_template(
+                        "/admin/students.html",
+                        students=students,
+                        fail="Saknar variabler.",
+                    ),
+                    400,
+                )
+
+            if not valid_integer(data["id"]):
+                return (
+                    render_template(
+                        "/admin/students.html",
+                        students=students,
+                        fail="Id måste vara heltal.",
+                    ),
+                    400,
+                )
+
+            # delete
+            sql_query(f"DELETE FROM students WHERE id={data['id']}")
+
+            # re-fetch
+            students = _get_students()
+
+            return render_template(
+                "/admin/students.html", students=students, success="Elev raderad."
+            )
+
+        # delete_from_class
+        if data["request_type"] == "delete_from_class":
+            if not data["id"]:
+                return (
+                    render_template(
+                        "/admin/students.html",
+                        students=students,
+                        fail="Saknar variabler.",
+                    ),
+                    400,
+                )
+
+            if not valid_integer(data["id"]):
+                return (
+                    render_template(
+                        "/admin/students.html",
+                        students=students,
+                        fail="Id måste vara heltal.",
+                    ),
+                    400,
+                )
+
+            # delete
+            sql_query(f"UPDATE students SET class_id=NULL WHERE id={data['id']}")
+
+            # re-fetch
+            students = _get_students()
+
+            return render_template(
+                "/admin/students.html",
+                students=students,
+                success="Elev raderad från klass.",
+            )
+
+        # if invalid request_type
+        return (
+            render_template(
+                "/admin/students.html", students=students, fail="Ogiltig förfrågan."
+            ),
+            400,
+        )
 
 
 # school classes management
