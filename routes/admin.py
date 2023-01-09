@@ -33,7 +33,7 @@ BASEPATH = "/admin"
 
 # admin login
 @admin_routes.route("/login")
-@limiter.limit("100 per hour")
+@limiter.limit("800 per hour")
 def login():
     """
     Admin authentication
@@ -47,6 +47,7 @@ def login():
 
 
 @admin_routes.route("/callback")
+@limiter.limit("200 per hour")
 def admin_callback():
     # Get authorization code Google sent back
     code = request.args.get("code")

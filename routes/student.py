@@ -57,7 +57,7 @@ def index():
 
 # login
 @student_routes.route("/login")
-@limiter.limit("200 per hour")
+@limiter.limit("800 per hour")
 def students_login():
     google_signin_url = get_google_redirect_url("/callback")
 
@@ -65,6 +65,7 @@ def students_login():
 
 
 @student_routes.route("/callback")
+@limiter.limit("200 per hour")
 @booking_blocked
 def students_callback():
     # Get authorization code Google sent back
