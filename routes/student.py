@@ -22,6 +22,7 @@ from components.limiter_obj import limiter
 # blueprint init
 student_routes = Blueprint("student_routes", __name__, template_folder="../templates")
 
+
 # index
 @student_routes.route("/")
 @booking_blocked
@@ -79,24 +80,34 @@ def students_callback():
     oauth_user = google_login(code, "/callback")
 
     existing_student = dict_sql_query(
-        f"SELECT * FROM students WHERE email='{oauth_user['email']}'", fetchone=True
+        "SELECT * FROM students WHERE email = %s",
+        fetchone=True,
+        params=(oauth_user["email"],),
     )
 
     # check if email exists in students
     if not existing_student:
         # create new object
         sql_query(
-            f"INSERT INTO students (email, last_name, first_name) VALUES ('{oauth_user['email']}', '{oauth_user['family_name']}', '{oauth_user['given_name']}')"
+            "INSERT INTO students (email, last_name, first_name) VALUES (%s, %s, %s)",
+            params=(
+                oauth_user["email"],
+                oauth_user["family_name"],
+                oauth_user["given_name"],
+            ),
         )
         existing_student = dict_sql_query(
-            f"SELECT * FROM students WHERE email='{oauth_user['email']}'", fetchone=True
+            "SELECT * FROM students WHERE email = %s",
+            fetchone=True,
+            params=(oauth_user["email"],),
         )
 
     school_class = None
     if existing_student["class_id"]:
         school_class = dict_sql_query(
-            f"SELECT class_name FROM school_classes WHERE id={existing_student['class_id']}",
+            "SELECT class_name FROM school_classes WHERE id = %s",
             fetchone=True,
+            params=(int(existing_student["class_id"]),),
         )["class_name"]
 
     session["fullname"] = f"{oauth_user['given_name']} {oauth_user['family_name']}"
@@ -178,7 +189,9 @@ def setup():
 
         # verify code
         school_class = dict_sql_query(
-            f"SELECT * FROM school_classes WHERE password='{join_code}'", fetchone=True
+            "SELECT * FROM school_classes WHERE password = %s",
+            fetchone=True,
+            params=(join_code,),
         )
 
         if not school_class:
@@ -224,7 +237,9 @@ def selected_activity(id):
             400,
         )
 
-    activity = dict_sql_query(f"SELECT * FROM activities WHERE id={id}", fetchone=True)
+    activity = dict_sql_query(
+        "SELECT * FROM activities WHERE id = %s", fetchone=True, params=(id,)
+    )
 
     if not activity:
         return (
@@ -235,7 +250,9 @@ def selected_activity(id):
         )
 
     # check if activity has questions
-    query = dict_sql_query(f"SELECT * FROM questions WHERE activity_id={id}")
+    query = dict_sql_query(
+        "SELECT * FROM questions WHERE activity_id = %s", params=(id,)
+    )
     questions = []
 
     if query:
@@ -245,7 +262,8 @@ def selected_activity(id):
                 {
                     "info": question,
                     "options": dict_sql_query(
-                        f"SELECT * FROM options WHERE question_id={question['id']}"
+                        "SELECT * FROM options WHERE question_id = %s",
+                        params=(question["id"],),
                     ),
                 }
             )
@@ -277,7 +295,7 @@ def selected_activity(id):
                 )
 
             question = dict_sql_query(
-                f"SELECT * FROM questions WHERE id={k}", fetchone=True
+                "SELECT * FROM questions WHERE id = %s", fetchone=True, params=(k,)
             )
 
             if not question:
@@ -333,7 +351,9 @@ def selected_activity(id):
                 )
 
         if len(request.form) < len(
-            dict_sql_query(f"SELECT * FROM questions WHERE activity_id={id}")
+            dict_sql_query(
+                "SELECT * FROM questions WHERE activity_id = %s", params=(id,)
+            )
         ):
             return (
                 render_template(
@@ -364,32 +384,34 @@ def selected_activity(id):
             )
 
         # delete any previous answers this user has submitted
-        sql_query(f"DELETE FROM answers WHERE student_id={session.get('id')}")
+        sql_query(
+            "DELETE FROM answers WHERE student_id = %s", params=(session.get("id"),)
+        )
 
         # validation completed
         for question_id, answer in request.form.items():
             # check if question is of type written or not
-            question = sql_query(f"SELECT * FROM questions WHERE id={question_id}")[0]
+            question = sql_query(
+                "SELECT * FROM questions WHERE id = %s", params=(question_id,)
+            )[0]
 
             if question[3]:
                 # written answers
                 sql_query(
-                    f"INSERT INTO answers (student_id, question_id, written_answer) VALUES ({session.get('id')}, {question_id}, '{str(answer)}');"
+                    "INSERT INTO answers (student_id, question_id, written_answer) VALUES (%s, %s, %s)",
+                    params=(session.get("id"), question_id, str(answer)),
                 )
             else:
                 # option
                 sql_query(
-                    f"INSERT INTO answers (student_id, question_id, option_id) VALUES ({session.get('id')}, {question_id}, {answer});"
+                    "INSERT INTO answers (student_id, question_id, option_id) VALUES (%s, %s, %s)",
+                    params=(session.get("id"), question_id, answer),
                 )
 
         # set chosen_activity
         sql_query(
-            f"""
-                UPDATE students
-                SET chosen_activity={int(id)},
-                attendance = 0
-                WHERE id={session.get('id')}
-            """
+            "UPDATE students SET chosen_activity = %s, attendance = 0 WHERE id = %s",
+            params=(int(id), session.get("id")),
         )
 
         return redirect("/confirmation")
@@ -410,19 +432,22 @@ def confirmation():
 
     chosen_activity = student_chosen_activity()
     answers = dict_sql_query(
-        f"SELECT * FROM answers WHERE student_id={session.get('id')}"
+        "SELECT * FROM answers WHERE student_id = %s",
+        params=(session.get("id"),),
     )
 
     if chosen_activity:
         questions = []
         for q in dict_sql_query(
-            f"SELECT * FROM questions WHERE activity_id={chosen_activity['id']}"
+            "SELECT * FROM questions WHERE activity_id = %s",
+            params=(chosen_activity["id"],),
         ):
             questions.append(
                 {
                     "object": q,
                     "options": dict_sql_query(
-                        f"SELECT * FROM options WHERE question_id={q['id']}"
+                        "SELECT * FROM options WHERE question_id = %s",
+                        params=(q["id"],),
                     ),
                 }
             )

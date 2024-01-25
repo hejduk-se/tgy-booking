@@ -43,6 +43,7 @@ minify(app=app)
 # custom footer
 CUSTOM_FOOTER = environ.get("CUSTOM_FOOTER", default=False)
 
+
 # variables available across all templates
 @app.context_processor
 def inject_global_variables():

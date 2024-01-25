@@ -46,7 +46,6 @@ def get_google_redirect_url(callback_url: str):
 
 
 def google_login(code: str, callback_url: str, ignore_wrong_hd=False):
-
     # If no code was sent
     if not code:
         abort(400, "Missing OAuth token")

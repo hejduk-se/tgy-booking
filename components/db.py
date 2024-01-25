@@ -18,7 +18,7 @@ def create_conn():
     )
 
 
-def sql_query(query):
+def sql_query(query, params: tuple = ()):
     """
     Performs specified SQL query in database. Returns result from cursor.fetchall(), usually tuple
     If searching for a specific object, note that object will be wrapped in outside tuple
@@ -28,7 +28,10 @@ def sql_query(query):
 
     try:
         with conn.cursor() as cursor:
-            cursor.execute(query)
+            if params != ():
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
             result = cursor.fetchall()
         conn.commit()
     finally:
@@ -37,7 +40,7 @@ def sql_query(query):
     return result
 
 
-def dict_sql_query(query, fetchone=False):
+def dict_sql_query(query, fetchone=False, params: tuple = ()):
     """
     Performs specified SQL query in database, return data as dict
 
@@ -48,7 +51,10 @@ def dict_sql_query(query, fetchone=False):
 
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-            cursor.execute(query)
+            if params != ():
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
             result = cursor.fetchone() if fetchone else cursor.fetchall()
 
         conn.commit()

@@ -12,9 +12,8 @@ def character_validation(
     swedish=True,
     allow_newline=True,
 ):
-
     # perform characters validation against is_valid_input function
-    ILLEGAL_CHARACTERS = ["<", ">", ";", "'", "\""]
+    ILLEGAL_CHARACTERS = ["<", ">", ";", "'", '"']
     ALLOWED_CHARACTERS = list(string.ascii_letters) + list(string.digits)
 
     if allow_space:
