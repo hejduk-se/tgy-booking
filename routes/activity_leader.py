@@ -21,7 +21,8 @@ BASEPATH = "/leader"
 def index():
     # fetch activities leader has access to
     query = dict_sql_query(
-        f"SELECT activity_id FROM leaders WHERE email='{session.get('leader_email')}'"
+        "SELECT activity_id FROM leaders WHERE email = %s",
+        params=(session.get("leader_email"),),
     )
 
     activities = []
@@ -30,19 +31,22 @@ def index():
 
         # get questions
         questions = dict_sql_query(
-            f"SELECT * FROM questions WHERE activity_id={obj['activity_id']}"
+            "SELECT * FROM questions WHERE activity_id = %s",
+            params=(obj["activity_id"],),
         )
 
         # students that selected this activity
         for student in dict_sql_query(
-            f"SELECT * FROM students WHERE chosen_activity={obj['activity_id']}"
+            "SELECT * FROM students WHERE chosen_activity = %s",
+            params=(obj["activity_id"],),
         ):
             # build answers
             answers = []
             for question in questions:
                 answer = dict_sql_query(
-                    f"SELECT * FROM answers WHERE question_id={question['id']} AND student_id={student['id']}",
+                    "SELECT * FROM answers WHERE question_id = %s AND student_id = %s",
                     fetchone=True,
+                    params=(question["id"], student["id"]),
                 )
 
                 if not answer:
@@ -51,8 +55,9 @@ def index():
                     if not question["written_answer"]:
                         answers.append(
                             dict_sql_query(
-                                f"SELECT text FROM options WHERE id={answer['option_id']}",
+                                "SELECT text FROM options WHERE id = %s",
                                 fetchone=True,
+                                params=(answer["option_id"],),
                             )["text"]
                         )
                     else:
@@ -62,8 +67,9 @@ def index():
                 {
                     "student": student,
                     "class_name": dict_sql_query(
-                        f"SELECT class_name FROM school_classes WHERE id={student['class_id']}",
+                        "SELECT class_name FROM school_classes WHERE id = %s",
                         fetchone=True,
+                        params=(student["class_id"],),
                     )["class_name"],
                     "answers": answers,
                 }
@@ -73,8 +79,9 @@ def index():
         activities.append(
             {
                 "name": dict_sql_query(
-                    f"SELECT name FROM activities WHERE id={obj['activity_id']}",
+                    "SELECT name FROM activities WHERE id = %s",
                     fetchone=True,
+                    params=(obj["activity_id"],),
                 )["name"],
                 "students": students,
                 "questions": questions,
@@ -119,7 +126,8 @@ def toggle_attendance(id, new_state):
         )
 
     student = dict_sql_query(
-        f"SELECT attendance, chosen_activity FROM students WHERE id={id}"
+        "SELECT attendance, chosen_activity FROM students WHERE id = %s",
+        params=(id,),
     )
 
     if not student:
@@ -132,7 +140,8 @@ def toggle_attendance(id, new_state):
 
     # fetch activities leader has access to
     query = dict_sql_query(
-        f"SELECT activity_id FROM leaders WHERE email='{session.get('leader_email')}'"
+        "SELECT activity_id FROM leaders WHERE email = %s",
+        params=(session.get("leader_email"),),
     )
 
     leader_has_access_to_activity = False
@@ -151,7 +160,13 @@ def toggle_attendance(id, new_state):
             401,
         )
 
-    sql_query(f"UPDATE students SET attendance={new_state} WHERE id={id}")
+    sql_query(
+        "UPDATE students SET attendance = %s WHERE id = %s",
+        params=(
+            new_state,
+            id,
+        ),
+    )
 
     return redirect(request.referrer)
 
