@@ -33,7 +33,7 @@ app = Flask(__name__)
 
 # setup rate limit
 app.config[
-    "RATELIMIT_STORAGE_URL"
+    "RATELIMIT_STORAGE_URI"
 ] = f"redis://{environ.get('REDIS_HOST', 'localhost')}"
 limiter.init_app(app)
 
