@@ -173,7 +173,9 @@ def students_callback():
 
     # perform some validation against database
     leader = dict_sql_query(
-        f"SELECT * FROM leaders WHERE email='{oauth_user['email']}'", fetchone=True
+        "SELECT * FROM leaders WHERE email = %s",
+        fetchone=True,
+        params=(oauth_user["email"],),
     )
 
     if not leader:

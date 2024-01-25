@@ -57,7 +57,9 @@ def admin_callback():
 
     # perform some validation against database
     admin = dict_sql_query(
-        f"SELECT * FROM admins WHERE email='{oauth_user['email']}'", fetchone=True
+        "SELECT * FROM admins WHERE email = %s",
+        fetchone=True,
+        params=(oauth_user["email"],),
     )
 
     if not admin:
