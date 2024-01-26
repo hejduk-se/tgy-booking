@@ -12,12 +12,15 @@ def student_chosen_activity():
     """Returns dict of chosen activity, if student has chosen"""
 
     student = dict_sql_query(
-        f"SELECT * FROM students WHERE id={session.get('id')}", fetchone=True
+        "SELECT * FROM students WHERE id = %s",
+        fetchone=True,
+        params=(session.get("id"),),
     )
 
     return (
         dict_sql_query(
-            f"SELECT * FROM activities WHERE id={student['chosen_activity']}",
+            "SELECT * FROM activities WHERE id = %s",
+            params=(student["chosen_activity"],),
             fetchone=True,
         )
         if student["chosen_activity"]

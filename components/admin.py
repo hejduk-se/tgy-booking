@@ -19,7 +19,9 @@ def get_activites_with_spaces():
 
 def get_activity_questions_and_options(id):
     # check if activity has questions
-    query = dict_sql_query(f"SELECT * FROM questions WHERE activity_id={id}")
+    query = dict_sql_query(
+        "SELECT * FROM questions WHERE activity_id = %s", params=(id,)
+    )
 
     questions = []
 
@@ -30,7 +32,8 @@ def get_activity_questions_and_options(id):
                 {
                     "question": question,
                     "options": dict_sql_query(
-                        f"SELECT * FROM options WHERE question_id={question['id']}"
+                        "SELECT * FROM options WHERE question_id = %s",
+                        params=(question["id"],),
                     ),
                 }
             )

@@ -34,8 +34,12 @@ def basic_validation(expected_values):
 def calculate_available_spaces(activity_id):
     """Returns integer of available spaces using specified activity_id"""
 
-    activity = sql_query(f"SELECT * FROM activities WHERE id={activity_id}")[0]
-    students = sql_query(f"SELECT * FROM students WHERE chosen_activity={activity_id}")
+    activity = sql_query(
+        "SELECT * FROM activities WHERE id = %s", params=(activity_id,)
+    )[0]
+    students = sql_query(
+        "SELECT * FROM students WHERE chosen_activity = %s", params=(activity_id,)
+    )
 
     return activity[2] - len(students)
 

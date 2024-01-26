@@ -17,7 +17,9 @@ def login_required(f):
             return redirect("/login")
 
         # check if student exists
-        student = sql_query(f"SELECT * FROM students WHERE id={session.get('id')}")
+        student = sql_query(
+            "SELECT * FROM students WHERE id = %s", params=(session.get("id"),)
+        )
 
         if not student:
             session.pop("id", None)
@@ -38,7 +40,9 @@ def admin_required(f):  # lgtm [py/similar-function]
             return redirect("/admin/login")
 
         # check if admin exists aswell
-        if not sql_query(f"SELECT id FROM admins WHERE id={session.get('admin_id')}"):
+        if not sql_query(
+            "SELECT id FROM admins WHERE id = %s", params=(session.get("admin_id"),)
+        ):
             session.pop("admin_logged_in", False)
             session.pop("admin_id", None)
 
@@ -57,7 +61,9 @@ def activity_leader_login_required(f):  # lgtm [py/similar-function]
             return redirect("/leader/login")
 
         # check if leader exists aswell
-        if not sql_query(f"SELECT id FROM leaders WHERE id={session.get('leader_id')}"):
+        if not sql_query(
+            "SELECT id FROM leaders WHERE id = %s", params=(session.get("leader_id"),)
+        ):
             session.pop("leader_logged_in", False)
             session.pop("leader_id", None)
 
@@ -73,7 +79,9 @@ def user_setup_completed(f):
     def decorated_function(*args, **kwargs):
         # decorator should be after @login_required, therefore assume user auth
         student = dict_sql_query(
-            f"SELECT * FROM students WHERE id={session.get('id')}", fetchone=True
+            "SELECT * FROM students WHERE id = %s",
+            fetchone=True,
+            params=(session.get("id"),),
         )
 
         if student:
@@ -96,7 +104,9 @@ def user_not_setup(f):
     def decorated_function(*args, **kwargs):
         # decorator should be after @login_required, therefore assume user auth
         student = dict_sql_query(
-            f"SELECT * FROM students WHERE id={session.get('id')}", fetchone=True
+            "SELECT * FROM students WHERE id = %s",
+            fetchone=True,
+            params=(session.get("id"),),
         )
 
         if student:
